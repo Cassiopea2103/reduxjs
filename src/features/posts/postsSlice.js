@@ -23,10 +23,11 @@ const postsSlice = createSlice (
 
             // add a new post : 
             addPost : {
-                prepare ( title , body ) {
+                prepare ( userId , title , body ) {
                     return {
                         payload : {
                             id : nanoid () , 
+                            userId , 
                             title , 
                             body 
                         }
@@ -38,7 +39,7 @@ const postsSlice = createSlice (
                 }                 
             } ,
 
-            
+
         }
     }
 )
