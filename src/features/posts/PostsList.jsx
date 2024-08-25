@@ -1,37 +1,51 @@
-import { useSelector } from 'react-redux' ; 
-import { selectAllPosts } from './postsSlice' ; 
+import { useSelector , useDispatch } from 'react-redux' ; 
+import { selectAllPosts , fetchPosts , getFetchPostsStatus , getFetchPostsError } from './postsSlice' ; 
+import { useEffect } from 'react';
 
-import PostAuthor from './PostAuthor';
-import ReactionButtons from './ReactionButtons' ; 
-import PostCreationTime from './PostCreationTime';
+import SinglePost from './SinglePost';
 
 
 const PostsList = () => {
 
-    //  retrieve posts initial state data from store : 
-    const postsData = useSelector ( selectAllPosts ).slice ().sort ( ( a , b ) => b.date.localeCompare ( a.date )) ; 
+    const dispatch = useDispatch () ; 
 
-    // rendered posts component  : 
-    const renderedPosts = postsData.map ( 
-        ( post ) => {
-            return ( 
-                <article key = { post.id } >
-                    <h3> { post.title } </h3>
-                    <p> { post.body.substring ( 0 , 100 ) } </p>
-                    <p className='postCredit'>
-                        <PostAuthor userId = { post.userId } />
-                    </p>
-                    <PostCreationTime postDate = { post.date } />
-                    <ReactionButtons post = { post } />
-                </article>
-            )
-        }
+    const fetchPostsStatus = useSelector ( getFetchPostsStatus ) ;
+    const fetchPostsError = useSelector ( getFetchPostsError ) ; 
+
+    // fetch all posts at application start : 
+    useEffect ( 
+        () => {
+            if ( fetchPostsStatus == 'idle' ) {
+                dispatch ( fetchPosts () ) ; 
+            }
+        } , 
+        [ fetchPostsStatus , dispatch ]
     )
+    
+
+    //  retrieve posts initial state data from store : 
+    const postsData = useSelector ( selectAllPosts ) ;  
+
+
+    let content ; 
+
+    if ( fetchPostsStatus == 'pending' ) {
+        content = <p>Loading ...</p>
+    }
+    else if ( fetchPostsStatus == 'succeeded' ) {
+        const orderedPosts = postsData.slice ().sort ( ( a , b ) => b.date.localeCompare ( a.date ) ) 
+        content = orderedPosts.map ( post => <SinglePost key = { post.id } post = { post } /> );
+    }
+    else if ( fetchPostsStatus == 'failed' ) {
+        content = <p>{ fetchPostsError }</p>
+    }
+
+
 
     return (
         <section>
-            <h2>Posts</h2>
-            { renderedPosts }
+            <h2>Posts List</h2>
+            { content  }
         </section>
     )
 }

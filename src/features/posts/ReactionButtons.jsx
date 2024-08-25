@@ -19,6 +19,7 @@ const ReactionButtons = ( { post } ) => {
         <div>
             {
                 Object.entries ( reaction ).map ( ( [ reactionName , reactionEmoji ] ) => {
+                    // create a button for each reaction : 
                     return (
                         <button
                             key = { reactionName }

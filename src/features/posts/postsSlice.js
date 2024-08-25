@@ -1,34 +1,33 @@
-import { createSlice , nanoid } from '@reduxjs/toolkit' ; 
+import { createSlice , nanoid , createAsyncThunk } from '@reduxjs/toolkit' ; 
+import axios from 'axios';
 import { sub } from 'date-fns' ; 
 
-const initialState = [
-    {
-        id : 1 , 
-        title : "Learning Redux js toolkit" , 
-        body : "I have heard good things" , 
-        date : sub ( new Date () , { minutes : 13 } ).toISOString () ,
-        reactions : {
-                        like : 0 , 
-                        love : 0 , 
-                        funny : 0 , 
-                        insightful : 0, 
-                        congrats : 0
-                    }
-    } , 
-    {
-        id : 2 , 
-        title : "Slices..." , 
-        body : "The more I hear slices , the more I want pizza" , 
-        date : sub ( new Date () , { minutes : 7 } ).toISOString () ,
-        reactions : {
-                        like : 0, 
-                        love : 0 , 
-                        funny : 0 , 
-                        insightful : 0, 
-                        congrats : 0
-                    }
+const initialState = {
+    posts : [] , 
+    status : 'idle' , // idle | pending | success | failed 
+    error : null 
+}
+
+// API URL : 
+const POSTS_URL = "https://jsonplaceholder.typicode.com/posts"
+
+// function to fetch posts data : 
+export const fetchPosts = createAsyncThunk ( "posts/fetchPosts" , async ( ) => {
+    try {
+        const response = await axios.get ( POSTS_URL ) ; 
+        return  response.data  ;
+
     }
-]
+    catch ( error ) {
+        console.log ( error ) ; 
+    }
+})
+
+// create a new post : 
+export const createPost = createAsyncThunk ( "posts/createPost" , async ( requestData ) => {
+    const response = await axios.post ( POSTS_URL , requestData ) ; 
+    return response.data  ; 
+})
 
 
 const postsSlice = createSlice (
@@ -42,7 +41,7 @@ const postsSlice = createSlice (
                 prepare ( userId , title , body ) {
                     return {
                         payload : {
-                            id : nanoid () , 
+                            id  , 
                             userId , 
                             title , 
                             body , 
@@ -59,7 +58,7 @@ const postsSlice = createSlice (
                 } ,
 
                 reducer ( state , action ) {
-                    state.push ( action.payload ) ; 
+                    state.posts.push ( action.payload ) ; 
                 }                 
             } ,
 
@@ -68,19 +67,94 @@ const postsSlice = createSlice (
                 const { postId , reactionName } = action.payload ; 
 
                 // find the given id post : 
-                const foundPost = state.find ( post => post.id == postId ) ; 
+                const foundPost = state.posts.find ( post => post.id == postId ) ; 
 
                 // update found post reaction count : 
                 if ( foundPost ) {
                     foundPost.reactions [ reactionName ]++ ; 
                 }
             }
+        } , 
+
+        // handling posts fetch cases : 
+        extraReducers ( builder ) {
+            builder
+                // pending request : 
+                .addCase (
+                    fetchPosts.pending , 
+                    ( state , action ) => {
+                        // set status : 
+                        state.status = 'pending'  ;
+                    }
+                )
+                .addCase ( 
+                    fetchPosts.fulfilled  , 
+                    ( state , action ) => {
+                        // set status to succeeded : 
+                        state.status = 'succeeded' ; 
+
+                        // loop through fetched data :  
+                        let min = 1 ; 
+                        const fetchedData = action.payload.map ( 
+                            fetchedPost => {
+                                // append date field : 
+                                fetchedPost.date = sub ( new Date () ,  { minutes : min ++ } ).toISOString () ; 
+                                // append reactions to fetched data : 
+                                fetchedPost.reactions = {
+                                    like : 0 , 
+                                    love : 0 , 
+                                    funny : 0 , 
+                                    insightful : 0, 
+                                    congrats : 0
+                                }
+
+                                // return transformed post data : 
+                                return fetchedPost ; 
+                            }
+                        )
+
+                        // add fetched posts transformed data to the initial state : 
+                        state.posts = state.posts.concat ( fetchedData ) ; 
+                    }
+                )
+                .addCase (
+                    fetchPosts.rejected , 
+                    ( state , action ) => {
+                        state.status = "failed" ; 
+                        state.error = action.error.message ; 
+                    }
+                ) 
+
+                .addCase ( 
+                    createPost.fulfilled , 
+                    ( state , action ) => {
+                        // convert the user id to Number : 
+                        action.payload.userId = Number ( action.payload.userId ) ; 
+                        // append date to post : 
+                        action.payload.date = new Date ().toISOString () ; 
+                        // append reactions to new post : 
+                        action.payload.reactions = {
+                            like : 0 , 
+                            love : 0 , 
+                            funny : 0 , 
+                            insightful : 0, 
+                            congrats : 0
+                        }
+
+                        // add the new posts to the initial array : 
+                        state.posts.push ( action.payload ) ; 
+                    }
+                )
         }
     }
 )
 
 // export psots data state : 
-export const  selectAllPosts = state => state.posts ;
+export const  selectAllPosts = state => state.posts.posts ;
+//  fetching posts status : 
+export const getFetchPostsStatus = state => state.posts.status ; 
+// fetch posts error : 
+export const getFetchPostsError = state => state.posts.error ; 
 
 // export reducer actions : 
 export const { addPost , addReaction } = postsSlice.actions 
