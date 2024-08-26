@@ -29,6 +29,20 @@ export const createPost = createAsyncThunk ( "posts/createPost" , async ( reques
     return response.data  ; 
 })
 
+// update a post : 
+export const updatePost = createAsyncThunk ( "posts/updatePost" , async ( requestData ) => {
+    // retrieve the id from the request data : 
+    const { id } = requestData ; 
+
+    try {
+        const response = await axios.put ( `${POSTS_URL}/${id}` , requestData ) ; 
+        return response.data ;
+    }
+    catch ( error ) {
+        console.log ( error ) ; 
+    }
+})
+
 
 const postsSlice = createSlice (
     {
@@ -144,6 +158,23 @@ const postsSlice = createSlice (
 
                         // add the new posts to the initial array : 
                         state.posts.push ( action.payload ) ; 
+                    }
+                )
+
+                .addCase (
+                    updatePost.fulfilled , 
+                    ( state , action ) => {
+                        if ( !action.payload.id ) {
+                            console.log ( "Update  could not complete" ) ; 
+                        }
+
+                        // retrieve id from response : 
+                        const { id } = action.payload ; 
+                        // set date for post : 
+                        action.payload.date = new Date().toISOString () ; 
+                        // filter and reset posts list : 
+                        const filteredPosts = state.posts.filter ( post => post.id !== id ) ; 
+                        state.posts = [...filteredPosts , action.payload ];
                     }
                 )
         }

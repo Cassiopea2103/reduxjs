@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import { selectPostById  , selectAllPosts} from "./postsSlice";
 
-import { useParams } from "react-router-dom";
+import { useParams , Link } from "react-router-dom";
 
 import PostAuthor from "./PostAuthor" ; 
 import PostCreationTime from "./PostCreationTime" ; 
@@ -30,6 +30,7 @@ const SinglePostPage = () => {
             <h2> { foundPost.title } </h2>
             <p> { foundPost.body } </p>
             <p className = "postCredit" >
+                <Link to={`/post/${ foundPost.id}/edit`}>Edit or Delete</Link>
                 <PostAuthor userId = { foundPost.userId } />
                 <PostCreationTime postDate = { foundPost.date } />
             </p>
