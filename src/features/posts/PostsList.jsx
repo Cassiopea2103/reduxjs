@@ -1,5 +1,5 @@
 import { useSelector , useDispatch } from 'react-redux' ; 
-import { selectAllPosts , fetchPosts , getFetchPostsStatus , getFetchPostsError } from './postsSlice' ; 
+import { selectAllPosts , fetchPosts , getFetchPostsStatus , getFetchPostsError , selectPostIds } from './postsSlice' ; 
 import { useEffect } from 'react';
 
 import SinglePost from './SinglePost';
@@ -24,7 +24,7 @@ const PostsList = () => {
     
 
     //  retrieve posts initial state data from store : 
-    const postsData = useSelector ( selectAllPosts ) ;  
+    const postsIds = useSelector ( selectPostIds ) ;   
 
 
     let content ; 
@@ -33,8 +33,8 @@ const PostsList = () => {
         content = <p>Loading ...</p>
     }
     else if ( fetchPostsStatus == 'succeeded' ) {
-        const orderedPosts = postsData.slice ().sort ( ( a , b ) => b.date.localeCompare ( a.date ) ) 
-        content = orderedPosts.map ( post => <SinglePost key = { post.id } post = { post } /> );
+        content = postsIds.map ( postId => <SinglePost key = { postId } postId = { postId } />)
+         
     }
     else if ( fetchPostsStatus == 'failed' ) {
         content = <p>{ fetchPostsError }</p>

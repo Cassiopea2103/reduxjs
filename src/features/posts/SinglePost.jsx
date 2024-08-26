@@ -1,11 +1,15 @@
 import PostAuthor from './PostAuthor';
 import ReactionButtons from './ReactionButtons' ; 
 import PostCreationTime from './PostCreationTime';
+import { selectPostById } from './postsSlice';
 
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 
-const SinglePost = ( { post } ) => {
+const SinglePost = ( { postId } ) => {
+
+    const post = useSelector ( state => selectPostById ( state , postId ) ) ; 
     
 
     return ( 

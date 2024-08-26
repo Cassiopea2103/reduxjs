@@ -1,13 +1,21 @@
-import { createSlice , createSelector , createAsyncThunk } from '@reduxjs/toolkit' ; 
+import { createSlice , createSelector , createAsyncThunk , createEntityAdapter} from '@reduxjs/toolkit' ; 
 import axios from 'axios';
 import { sub } from 'date-fns' ; 
 
-const initialState = {
-    posts : [] , 
-    status : 'idle' , // idle | pending | success | failed 
-    error : null , 
-    count : 0 
-}
+
+const postsAdapter = createEntityAdapter ( 
+    {
+        sortComparer : ( a , b ) => b.date.localeCompare ( a.date ) 
+    }
+)
+
+const initialState = postsAdapter.getInitialState (
+    {
+        status : 'idle' , // idle | pending | success | failed 
+        error : null , 
+        count : 0 
+    }
+)
 
 // API URL : 
 const POSTS_URL = "https://jsonplaceholder.typicode.com/posts"
@@ -106,7 +114,7 @@ const postsSlice = createSlice (
                 const { postId , reactionName } = action.payload ; 
 
                 // find the given id post : 
-                const foundPost = state.posts.find ( post => post.id == postId ) ; 
+                const foundPost = state.entities [ postId ] ; 
 
                 // update found post reaction count : 
                 if ( foundPost ) {
@@ -154,7 +162,7 @@ const postsSlice = createSlice (
                         )
 
                         // add fetched posts transformed data to the initial state : 
-                        state.posts =  fetchedData ; 
+                        postsAdapter.upsertMany ( state , fetchedData ) ;  
                     }
                 )
                 .addCase (
@@ -182,7 +190,7 @@ const postsSlice = createSlice (
                         }
 
                         // add the new posts to the initial array : 
-                        state.posts.push ( action.payload ) ; 
+                        postsAdapter.addOne ( state , action.payload ) ; 
                     }
                 )
 
@@ -198,9 +206,8 @@ const postsSlice = createSlice (
                         const { id } = action.payload ; 
                         // set date for post : 
                         action.payload.date = new Date().toISOString () ; 
-                        // filter and reset posts list : 
-                        const filteredPosts = state.posts.filter ( post => post.id !== id ) ; 
-                        state.posts = [...filteredPosts , action.payload ];
+                        // update the post and add it to the posts list : 
+                        postsAdapter.upsertOne ( state , action.payload ) ;
                     }
                 )
                 .addCase (
@@ -213,9 +220,9 @@ const postsSlice = createSlice (
 
                         // retrieve id from response : 
                         const { id } = action.payload ; 
-                        // filter corresponding post : 
-                        const posts = state.posts.filter ( post => post.id != id ) ; 
-                        state.posts = posts
+                        // remove it :
+                        postsAdapter.removeOne ( state , id ) ; 
+                        
                     }
                 )
         }
@@ -225,17 +232,8 @@ const postsSlice = createSlice (
 // export count selection : 
 export const getCount = state => state.posts.count ; 
 
-// export psots data state : 
-export const  selectAllPosts = state => state.posts.posts ;
 
-// select post by user Id ( memoized ) : 
-export const selectPostsByUserId = createSelector ( 
-    [ selectAllPosts , ( state , userId ) => userId ] , 
-    ( posts , userId ) => posts.filter ( post => post.userId == userId )
-)
 
-// select a post by id : 
-export const selectPostById = ( state , postId ) => state.posts.posts.find ( post => post.id == Number ( postId ) ) ; 
 //  fetching posts status : 
 export const getFetchPostsStatus = state => state.posts.status ; 
 // fetch posts error : 
@@ -243,6 +241,20 @@ export const getFetchPostsError = state => state.posts.error ;
 
 // export reducer actions : 
 export const { addPost , addReaction  , increaseCount , decreaseCount } = postsSlice.actions 
+
+// export selectors for posts : 
+export const {
+    selectAll : selectAllPosts , 
+    selectById : selectPostById , 
+    selectIds : selectPostIds 
+} = postsAdapter.getSelectors ( state => state.posts ) ;
+
+// select post by user Id ( memoized ) : 
+export const selectPostsByUserId = createSelector ( 
+    [ selectAllPosts , ( state , userId ) => userId ] , 
+    ( posts , userId ) => posts.filter ( post => post.userId == userId )
+)
+
 
 //  export the posts slice reducer : 
 export default postsSlice.reducer ;  
