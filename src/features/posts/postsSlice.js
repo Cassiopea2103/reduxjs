@@ -1,11 +1,12 @@
-import { createSlice , nanoid , createAsyncThunk } from '@reduxjs/toolkit' ; 
+import { createSlice , createSelector , createAsyncThunk } from '@reduxjs/toolkit' ; 
 import axios from 'axios';
 import { sub } from 'date-fns' ; 
 
 const initialState = {
     posts : [] , 
     status : 'idle' , // idle | pending | success | failed 
-    error : null 
+    error : null , 
+    count : 0 
 }
 
 // API URL : 
@@ -65,6 +66,14 @@ const postsSlice = createSlice (
         name : "posts" , 
         initialState , 
         reducers : {
+
+            // counter reducer : 
+            increaseCount ( state , action ) {
+                state.count += 1 ;
+            },
+            decreaseCount ( state , action ) {
+                state.count -= 1 ; 
+            },
 
             // add a new post : 
             addPost : {
@@ -213,8 +222,17 @@ const postsSlice = createSlice (
     }
 )
 
+// export count selection : 
+export const getCount = state => state.posts.count ; 
+
 // export psots data state : 
 export const  selectAllPosts = state => state.posts.posts ;
+
+// select post by user Id ( memoized ) : 
+export const selectPostsByUserId = createSelector ( 
+    [ selectAllPosts , ( state , userId ) => userId ] , 
+    ( posts , userId ) => posts.filter ( post => post.userId == userId )
+)
 
 // select a post by id : 
 export const selectPostById = ( state , postId ) => state.posts.posts.find ( post => post.id == Number ( postId ) ) ; 
@@ -224,7 +242,7 @@ export const getFetchPostsStatus = state => state.posts.status ;
 export const getFetchPostsError = state => state.posts.error ; 
 
 // export reducer actions : 
-export const { addPost , addReaction } = postsSlice.actions 
+export const { addPost , addReaction  , increaseCount , decreaseCount } = postsSlice.actions 
 
 //  export the posts slice reducer : 
 export default postsSlice.reducer ;  
