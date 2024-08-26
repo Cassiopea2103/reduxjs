@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useParams , useNavigate } from "react-router-dom";
 
 import { useSelector , useDispatch } from "react-redux";
-import { selectPostById ,  updatePost } from "./postsSlice";
+import { selectPostById ,  updatePost , deletePost } from "./postsSlice";
 import { selectAllUsers } from "../users/usersSlice";
 
 
@@ -64,6 +64,30 @@ const EditDeletePost = () => {
         }
     }
 
+    // function to delete the post : 
+    const onDeletePostClicked = () => {
+        try {
+            // change request status : 
+            setRequestStatus ( 'pending' ) ;
+            // dispatch post update : 
+            dispatch ( deletePost ( {  id : postId }) ).unwrap () ; 
+
+            // reset states : 
+            setTitle ( '' ) ; 
+            setBody ( '' ) ; 
+            setUserId ( '' ) ; 
+
+            // navigate back to posts list page : 
+            navigate ( '/' ) ;  
+        }
+        catch ( error ) {
+            console.log ( error ) ; 
+        }
+        finally {
+            setRequestStatus ( 'idle' ) ; 
+        }
+    }
+
     // return a post not found message if foundPost does not exist : 
     if ( !foundPost ) {
         return <h1>Post not found !</h1>
@@ -116,6 +140,12 @@ const EditDeletePost = () => {
                     onClick={ onUpdatePostClicked }
                 >
                     Save Post
+                </button>
+                <button
+                    className="deleteButton"
+                    onClick={ onDeletePostClicked }
+                >
+                    Delete Post
                 </button>
             </form>
         </section>

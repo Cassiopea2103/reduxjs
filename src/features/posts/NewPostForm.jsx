@@ -5,8 +5,13 @@ import { createPost } from './postsSlice';
 import { useSelector } from 'react-redux';
 import { selectAllUsers } from '../users/usersSlice' ; 
 
+import { useNavigate } from "react-router-dom";
+
+
 
 const NewPostForm = () => {
+
+    const navigate = useNavigate () ; 
 
     // users data : 
     const usersData = useSelector ( selectAllUsers ) ; 
@@ -39,6 +44,9 @@ const NewPostForm = () => {
                 setUserId ( '' ) ; 
                 setTitle ( '' ) ; 
                 setBody ( '' ) ; 
+
+                // back to home page : 
+                navigate ( '/' ) ;
             }
 
             catch ( error ) {
