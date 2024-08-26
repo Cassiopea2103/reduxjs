@@ -2,18 +2,21 @@ import PostAuthor from './PostAuthor';
 import ReactionButtons from './ReactionButtons' ; 
 import PostCreationTime from './PostCreationTime';
 
+import { Link } from 'react-router-dom';
+
 
 const SinglePost = ( { post } ) => {
     
 
     return ( 
-        <article key = { post.id } >
+        <article>
             <h3> { post.title } </h3>
-            <p> { post.body.substring ( 0 , 100 ) } </p>
+            <p className='postExcerpt'> { post.body.substring ( 0 , 50 ) }... </p>
             <p className='postCredit'>
+                <Link to={`post/${ post.id }`} >View Post</Link>
                 <PostAuthor userId = { post.userId } />
+                <PostCreationTime postDate = { post.date } />
             </p>
-            <PostCreationTime postDate = { post.date } />
             <ReactionButtons post = { post } />
         </article>
     )

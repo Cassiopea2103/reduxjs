@@ -97,6 +97,7 @@ const postsSlice = createSlice (
                         let min = 1 ; 
                         const fetchedData = action.payload.map ( 
                             fetchedPost => {
+
                                 // append date field : 
                                 fetchedPost.date = sub ( new Date () ,  { minutes : min ++ } ).toISOString () ; 
                                 // append reactions to fetched data : 
@@ -114,7 +115,7 @@ const postsSlice = createSlice (
                         )
 
                         // add fetched posts transformed data to the initial state : 
-                        state.posts = state.posts.concat ( fetchedData ) ; 
+                        state.posts =  fetchedData ; 
                     }
                 )
                 .addCase (
@@ -151,6 +152,9 @@ const postsSlice = createSlice (
 
 // export psots data state : 
 export const  selectAllPosts = state => state.posts.posts ;
+
+// select a post by id : 
+export const selectPostById = ( state , postId ) => state.posts.posts.find ( post => post.id == Number ( postId ) ) ; 
 //  fetching posts status : 
 export const getFetchPostsStatus = state => state.posts.status ; 
 // fetch posts error : 

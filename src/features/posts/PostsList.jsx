@@ -15,7 +15,7 @@ const PostsList = () => {
     // fetch all posts at application start : 
     useEffect ( 
         () => {
-            if ( fetchPostsStatus == 'idle' ) {
+            if ( fetchPostsStatus === 'idle' ) {
                 dispatch ( fetchPosts () ) ; 
             }
         } , 

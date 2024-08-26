@@ -1,6 +1,6 @@
 import { useState } from 'react' ; 
 import { useDispatch } from 'react-redux' ; 
-import { addPost } from './postsSlice';
+import { createPost } from './postsSlice';
 
 import { useSelector } from 'react-redux';
 import { selectAllUsers } from '../users/usersSlice' ; 
@@ -16,23 +16,37 @@ const NewPostForm = () => {
     const [ userId , setUserId ] = useState ( '' ) ; 
     const [ title , setTitle ] = useState ( '' ) ; 
     const [ body , setBody ] = useState ( '' ) ; 
+    const [ status , setStatus ] = useState ( 'idle' ) ; 
 
     const onUserIdChange = e => setUserId ( e.target.value ) ; 
     const onTitleChange = e => setTitle ( e.target.value ) ; 
     const onBodyChange = e => setBody ( e.target.value ) ;
 
+    const canSave =  [ title , body , userId ].every ( Boolean ) &&  status === 'idle' ; 
+
     const onCreatePostClick = () => {
 
         // check form data : 
-        if ( title && body ) {
-            // create a new post : 
-            dispatch ( addPost ( userId , title , body ) ) ; 
+        if ( canSave ) {
+            try {
+                // change request status : 
+                setStatus ( 'pending' ) ; 
+                // create a new post : 
+                dispatch ( createPost ( {userId , title , body} ) ).unwrap() ; 
 
 
-            // reset title and body states : 
-            setUserId ( '' ) ; 
-            setTitle ( '' ) ; 
-            setBody ( '' ) ; 
+                // reset title and body states : 
+                setUserId ( '' ) ; 
+                setTitle ( '' ) ; 
+                setBody ( '' ) ; 
+            }
+
+            catch ( error ) {
+                console.log ( error.message ) 
+            }
+            finally {
+                setStatus ( 'idle' ) ; 
+            }
         }
     } 
 
@@ -46,8 +60,6 @@ const NewPostForm = () => {
             )
         }
     )
-
-    const canSave = Boolean ( title ) && Boolean ( body ) && Boolean ( userId ) ; 
 
     return ( 
         <section>
